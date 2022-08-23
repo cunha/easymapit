@@ -151,29 +151,39 @@ itdkdate=$(grep -Ee "^$shortdate" /data/bdrmapit/itdk/datemap.txt \
         | cut -d " " -f 2)
 itdkdate=${itdkdate:0:6}
 
-truncate --size 0 /data/bdrmapit/ripe-index.txt
-truncate --size 0 /data/bdrmapit/warts-index.txt
-
+truncate --size 0 /data/bdrmapit/ripe-recent-index.txt
 if [[ -d /data/bdrmapit/ripe-recent ]] ; then
-    find /data/bdrmapit/ripe-recent -name "traceroute-*bz2" -type f \
-            >> /data/bdrmapit/ripe-index.txt
+    find /data/bdrmapit/ripe-recent -name "traceroute-$date*bz2" -type f \
+            > /data/bdrmapit/ripe-recent-index.txt
 fi
 
+truncate --size 0 /data/bdrmapit/warts-prefix-index.txt
 if [[ -d /data/bdrmapit/prefix ]] ; then
     find /data/bdrmapit/prefix -name "*.warts.gz" -type f \
-            >> /data/bdrmapit/warts-index.txt
+            > /data/bdrmapit/warts-prefix-index.txt
 fi
+
+truncate --size 0 /data/bdrmapit/warts-team-index.txt
 if [[ -d /data/bdrmapit/team ]] ; then
     find /data/bdrmapit/team -name "*.warts.gz" -type f \
-            >> /data/bdrmapit/warts-index.txt
+            > /data/bdrmapit/warts-team-index.txt
 fi
+
+cat /data/bdrmapit/warts-prefix-index.txt /data/bdrmapit/warts-team-index.txt \
+        > /data/bdrmapit/warts-nopeering-index.txt
 
 case $tracetype in
 A)
-    cat "$tracelist" >> /data/bdrmapit/ripe-index.txt
+    cat "$tracelist" /data/bdrmapit/ripe-recent-index.txt \
+            > /data/bdrmapit/ripe-index.txt
+    cp /data/bdrmapit/warts-nopeering-index.txt /data/bdrmapit/warts-index.txt
+    truncate --size 0 /data/bdrmapit/warts-nocaida-index.txt
     ;;
 W)
-    cat "$tracelist" >> /data/bdrmapit/warts-index.txt
+    cp /data/bdrmapit/ripe-recent-index.txt /data/bdrmapit/ripe-index.txt
+    cat "$tracelist" /data/bdrmapit/warts-nopeering-index.txt \
+            > /data/bdrmapit/warts-index.txt
+    cp "$tracelist" /data/bdrmapit/warts-nocaida-index.txt
     ;;
 esac
 
@@ -189,6 +199,44 @@ bdrmapit all \
         -c "/data/bdrmapit/rels/${monthdate}01.ppdc-ases.txt.bz2" \
         -P "/data/bdrmapit/peeringdb/peeringdb_2_dump_$underdate.json" \
         -R "/data/bdrmapit/itdk/$itdkdate-midar-iff.nodes.as.bz2" \
-        -s "/data/bdrmapit/output/annotations.sqlite3" \
+        -s "/data/bdrmapit/output/$shortdate-full.sqlite3" \
+        -p $NUMPROCS
+
+echo "launching bdrmapit + noripe"
+bdrmapit all \
+        -w /data/bdrmapit/warts-index.txt \
+        -i "/data/bdrmapit/ip2as/$shortdate.prefixes" \
+        -b "/data/bdrmapit/asorg/$asorgdate.as-org2info.jsonl.gz" \
+        -r "/data/bdrmapit/rels/${monthdate}01.as-rel.txt.bz2" \
+        -c "/data/bdrmapit/rels/${monthdate}01.ppdc-ases.txt.bz2" \
+        -P "/data/bdrmapit/peeringdb/peeringdb_2_dump_$underdate.json" \
+        -R "/data/bdrmapit/itdk/$itdkdate-midar-iff.nodes.as.bz2" \
+        -s "/data/bdrmapit/output/$shortdate-noripe.sqlite3" \
+        -p $NUMPROCS
+
+echo "launching bdrmapit + nocaida"
+bdrmapit all \
+        -w /data/bdrmapit/warts-nocaida-index.txt \
+        -a /data/bdrmapit/ripe-index.txt \
+        -i "/data/bdrmapit/ip2as/$shortdate.prefixes" \
+        -b "/data/bdrmapit/asorg/$asorgdate.as-org2info.jsonl.gz" \
+        -r "/data/bdrmapit/rels/${monthdate}01.as-rel.txt.bz2" \
+        -c "/data/bdrmapit/rels/${monthdate}01.ppdc-ases.txt.bz2" \
+        -P "/data/bdrmapit/peeringdb/peeringdb_2_dump_$underdate.json" \
+        -R "/data/bdrmapit/itdk/$itdkdate-midar-iff.nodes.as.bz2" \
+        -s "/data/bdrmapit/output/$shortdate-nocaida.sqlite3" \
+        -p $NUMPROCS
+
+echo "launching bdrmapit + nopeering"
+bdrmapit all \
+        -w /data/bdrmapit/warts-nopeering-index.txt \
+        -a /data/bdrmapit/ripe-recent-index.txt \
+        -i "/data/bdrmapit/ip2as/$shortdate.prefixes" \
+        -b "/data/bdrmapit/asorg/$asorgdate.as-org2info.jsonl.gz" \
+        -r "/data/bdrmapit/rels/${monthdate}01.as-rel.txt.bz2" \
+        -c "/data/bdrmapit/rels/${monthdate}01.ppdc-ases.txt.bz2" \
+        -P "/data/bdrmapit/peeringdb/peeringdb_2_dump_$underdate.json" \
+        -R "/data/bdrmapit/itdk/$itdkdate-midar-iff.nodes.as.bz2" \
+        -s "/data/bdrmapit/output/$shortdate-nopeering.sqlite3" \
         -p $NUMPROCS
 logtime "RUNTIME END bdrmapit with $NUMPROCS cores"
