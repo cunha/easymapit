@@ -119,9 +119,8 @@ itdkdate=$(grep -Ee "^$shortdate" /data/bdrmapit/itdk/datemap.txt \
         | cut -d " " -f 2)
 itdkdate=${itdkdate:0:6}
 
-rm -f /data/bdrmapit/ripe-index.txt /data/bdrmapit/warts-index.txt
-touch /data/bdrmapit/ripe-index.txt
-touch /data/bdrmapit/warts-index.txt
+truncate --size 0 /data/bdrmapit/ripe-index.txt
+truncate --size 0 /data/bdrmapit/warts-index.txt
 
 if [[ -d /data/bdrmapit/ripe-recent ]] ; then
     find /data/bdrmapit/ripe-recent -name "traceroute-$date*bz2" -type f \
