@@ -5,8 +5,8 @@ NUMPROCS=12
 
 usage () {
     cat <<EOF
-Usage: docker run -v <localpath>:/data easymapit <tracetype> <tracelist> <date>
-               [<user> <pass>]
+Usage: docker run -v <localpath>:/data easymapit <tracetype> <tracelist>
+               <date> <days> [<user> <pass>]
 
 <localpath>    A path in the local file system where input traces are
                located.  This will be mounted as a shared volume on /data
@@ -29,6 +29,10 @@ Usage: docker run -v <localpath>:/data easymapit <tracetype> <tracelist> <date>
 <date>         A date in ISO format, e.g., 2021-10-20, usually the date
                corresponding to when the measurements in <tracelist> were
                collected.
+
+<days>         Number of additional days starting from <date> to be
+               downloaded from Ark and Atlas to use as training data
+               for bdrmapit; pass 0 to use only one day of traces.
 
 <user/pass>    Login to download recent traceroutes from CAIDA's topology
                measurements.  If no login is provided, public data will be
@@ -62,14 +66,18 @@ user=invalid
 pass=invalid
 tracecmd=public-
 traceopts=()
-if [[ $# -eq 5 ]] ; then
-    user=$4
-    pass=$5
+if [[ $4 -gt 0 ]] ; then
+    enddate=$(date --date "$date +1 day" +%Y-%m-%d)
+    traceopts=(-e "$enddate")
+fi
+if [[ $# -eq 6 ]] ; then
+    user=$5
+    pass=$6
     tracecmd=caida-
-    traceopts=(-u "$user" -p "$pass")
+    traceopts+=(-u "$user" -p "$pass")
 fi
 
-for data in asorg bgp peeringdb prefix2as rels ripe-recent rir ; do
+for data in asorg bgp peeringdb prefix2as rels rir ; do
     if [[ -d /data/bdrmapit/$data ]] ; then
         echo "/data/bdrmapit/$data present, skipping"
         continue
@@ -105,7 +113,7 @@ if [[ ! -s "/data/bdrmapit/ip2as/$shortdate.prefixes" ]] ; then
             -o "/data/bdrmapit/ip2as/$shortdate.prefixes"
 fi
 
-for data in prefix team itdk ; do
+for data in itdk prefix ripe-recent team ; do
     if [[ -d /data/bdrmapit/$data ]] ; then
         echo "/data/bdrmapit/$data present, skipping"
         continue
