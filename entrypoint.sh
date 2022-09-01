@@ -55,7 +55,7 @@ EOF
 exit 1
 }
 
-if [[ $# -ne 3 && $# -ne 5 ]] ; then usage ; fi
+if [[ $# -ne 4 && $# -ne 6 ]] ; then usage ; fi
 
 tracetype=$1
 if [[ $tracetype != A && $tracetype != W ]] ; then usage ; fi
@@ -64,7 +64,7 @@ date=$3
 
 user=invalid
 pass=invalid
-tracecmd=public-
+caidapfx=public-
 traceopts=()
 if [[ $4 -gt 0 ]] ; then
     enddate=$(date --date "$date +1 day" +%Y-%m-%d)
@@ -73,7 +73,7 @@ fi
 if [[ $# -eq 6 ]] ; then
     user=$5
     pass=$6
-    tracecmd=caida-
+    caidapfx=caida-
     traceopts+=(-u "$user" -p "$pass")
 fi
 
@@ -118,9 +118,11 @@ for data in itdk prefix ripe-recent team ; do
         echo "/data/bdrmapit/$data present, skipping"
         continue
     fi
+    target=$caidapfx$data
+    if [[ $data == ripe-recent ]] ; then target=ripe-recent ; fi
     echo "retrieving /data/bdrmapit/$data"
     retrieve_external -b "$date" -d /data/bdrmapit/$data \
-            "${traceopts[@]}" $tracecmd$data
+            "${traceopts[@]}" $target
 done
 
 itdkdate=$(grep -Ee "^$shortdate" /data/bdrmapit/itdk/datemap.txt \
