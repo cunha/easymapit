@@ -39,7 +39,8 @@ Usage: docker run -v <localpath>:/data easymapit <tracetype> <tracelist>
                used.  However, public traceroutes only include traces
                more than one year old.
 
-Example: docker run -v data:/data easymapit /data/traces.txt 2021-10-20
+Example:
+$ docker run -v \$(pwd)/data:/data easymapit W /data/traces.txt 2021-10-20 0
 
 Notes:
 
@@ -166,5 +167,5 @@ bdrmapit all \
         -c "/data/bdrmapit/rels/${monthdate}01.ppdc-ases.txt.bz2" \
         -P "/data/bdrmapit/peeringdb/peeringdb_2_dump_$underdate.json" \
         -R "/data/bdrmapit/itdk/$itdkdate-midar-iff.nodes.as.bz2" \
-        -s "/data/bdrmapit/output/$shortdate.sqlite3" \
+        -s "/data/bdrmapit/output/annotations.sqlite3" \
         -p $NUMPROCS
