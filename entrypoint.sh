@@ -95,8 +95,8 @@ asorgdate=$(grep -Ee "^$shortdate" /data/bdrmapit/asorg/datemap.txt \
 
 if [[ ! -s "/data/bdrmapit/rir/$shortdate.rir.prefixes" ]] ; then
     echo "Generating RIR prefix-to-AS file"
-    find /data/bdrmapit/rir -type f > rir.files
-    rir2as -f rir.files \
+    find /data/bdrmapit/rir -type f > /data/bdrmapit/rir/rir.files
+    rir2as -f /data/bdrmapit/rir/rir.files \
             -r "/data/bdrmapit/rels/$shortdate.as-rel.txt.bz2" \
             -c "/data/bdrmapit/rels/$shortdate.cc.txt.bz2" \
             -o "/data/bdrmapit/rir/$shortdate.rir.prefixes"
