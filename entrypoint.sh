@@ -68,7 +68,7 @@ pass=invalid
 caidapfx=public-
 traceopts=()
 if [[ $4 -gt 0 ]] ; then
-    enddate=$(date --date "$date +1 day" +%Y-%m-%d)
+    enddate=$(date --date "$date +$4 day" +%Y-%m-%d)
     traceopts=(-e "$enddate")
 fi
 if [[ $# -eq 6 ]] ; then
