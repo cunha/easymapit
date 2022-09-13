@@ -1,9 +1,9 @@
-#!/bin/bash
+u#!/bin/bash
 set -eu
 
 NUMPROCS=12
 
-usage () {
+function usage {
     cat <<EOF
 Usage: docker run -v <localpath>:/data easymapit <tracetype> <tracelist>
                <date> <days> [<user> <pass>]
@@ -56,6 +56,11 @@ EOF
 exit 1
 }
 
+function logtime {
+    local message=$1
+    echo "$(date +%Y%m%d.%H%M%S) $message"
+}
+
 if [[ $# -ne 4 && $# -ne 6 ]] ; then usage ; fi
 
 tracetype=$1
@@ -84,7 +89,9 @@ for data in asorg bgp peeringdb prefix2as rels rir ; do
         continue
     fi
     echo "retrieving /data/bdrmapit/$data"
+    logtime "RUNTIME START retrieve /data/bdrmapit/$data"
     retrieve_external -b "$date" -d /data/bdrmapit/$data $data
+    logtime "RUNTIME END retrieve /data/bdrmapit/$data"
 done
 
 shortdate=${date//-/}
@@ -96,15 +103,18 @@ asorgdate=$(grep -Ee "^$shortdate" /data/bdrmapit/asorg/datemap.txt \
 if [[ ! -s "/data/bdrmapit/rir/$shortdate.rir.prefixes" ]] ; then
     echo "Generating RIR prefix-to-AS file"
     find /data/bdrmapit/rir -type f > /data/bdrmapit/rir/rir.files
+    logtime "RUNTIME START rir2as"
     rir2as -f /data/bdrmapit/rir/rir.files \
             -r "/data/bdrmapit/rels/$shortdate.as-rel.txt.bz2" \
             -c "/data/bdrmapit/rels/$shortdate.cc.txt.bz2" \
             -o "/data/bdrmapit/rir/$shortdate.rir.prefixes"
+    logtime "RUNTIME END rir2as"
 fi
 
 if [[ ! -s "/data/bdrmapit/ip2as/$shortdate.prefixes" ]] ; then
     echo "Generating global ip2as file"
     mkdir -p /data/bdrmapit/ip2as
+    logtime "RUNTIME START ip2as"
     ip2as -p /data/bdrmapit/prefix2as/routeviews-rv2-"$shortdate"-????.pfx2as.gz \
             -P "/data/bdrmapit/peeringdb/peeringdb_2_dump_$underdate.json" \
             -r "/data/bdrmapit/rir/$shortdate.rir.prefixes" \
@@ -112,6 +122,7 @@ if [[ ! -s "/data/bdrmapit/ip2as/$shortdate.prefixes" ]] ; then
             -c "/data/bdrmapit/rels/${monthdate}01.ppdc-ases.txt.bz2" \
             -a "/data/bdrmapit/asorg/$asorgdate.as-org2info.jsonl.gz" \
             -o "/data/bdrmapit/ip2as/$shortdate.prefixes"
+    logtime "RUNTIME END ip2as"
 fi
 
 for data in itdk prefix ripe-recent team ; do
@@ -122,8 +133,10 @@ for data in itdk prefix ripe-recent team ; do
     target=$caidapfx$data
     if [[ $data == ripe-recent ]] ; then target=ripe-recent ; fi
     echo "retrieving /data/bdrmapit/$data"
+    logtime "RUNTIME START retrieve /data/bdrmapit/$data"
     retrieve_external -b "$date" -d /data/bdrmapit/$data \
             "${traceopts[@]}" $target
+    logtime "RUNTIME END retrieve /data/bdrmapit/$data"
 done
 
 itdkdate=$(grep -Ee "^$shortdate" /data/bdrmapit/itdk/datemap.txt \
@@ -156,8 +169,9 @@ W)
     ;;
 esac
 
-mkdir -p /data/bdrmapit/output
 echo "launching bdrmapit"
+mkdir -p /data/bdrmapit/output
+logtime "RUNTIME START bdrmapit with $NUMPROCS cores"
 bdrmapit all \
         -w /data/bdrmapit/warts-index.txt \
         -a /data/bdrmapit/ripe-index.txt \
@@ -169,3 +183,4 @@ bdrmapit all \
         -R "/data/bdrmapit/itdk/$itdkdate-midar-iff.nodes.as.bz2" \
         -s "/data/bdrmapit/output/annotations.sqlite3" \
         -p $NUMPROCS
+logtime "RUNTIME END bdrmapit with $NUMPROCS cores"
