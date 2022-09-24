@@ -1,9 +1,10 @@
-u#!/bin/bash
+#!/bin/bash
 set -eu
 
 NUMPROCS=12
 
 function usage {
+    local msg=$1
     cat <<EOF
 Usage: docker run -v <localpath>:/data easymapit <tracetype> <tracelist>
                <date> <days> [<user> <pass>]
@@ -52,6 +53,7 @@ these directories if errors occur to trigger a new download.
     /data/bdrmapit/{asorg, bgp, itdk, peeringdb, prefix2as, prefix, rels,
                     ripe-recent, rir, team}
 
+Error: $msg
 EOF
 exit 1
 }
@@ -61,10 +63,14 @@ function logtime {
     echo "$(date +%Y%m%d.%H%M%S) $message"
 }
 
-if [[ $# -ne 4 && $# -ne 6 ]] ; then usage ; fi
+if [[ $# -ne 4 && $# -ne 6 ]] ; then
+    usage "received incorrect number of parameters"
+fi
 
 tracetype=$1
-if [[ $tracetype != A && $tracetype != W ]] ; then usage ; fi
+if [[ $tracetype != A && $tracetype != W ]] ; then
+    usage "tracetype should be either A or W"
+fi
 tracelist=$2
 date=$3
 
@@ -75,12 +81,14 @@ traceopts=()
 if [[ $4 -gt 0 ]] ; then
     enddate=$(date --date "$date +$4 day" +%Y-%m-%d)
     traceopts=(-e "$enddate")
+    echo "end date is $enddate"
 fi
 if [[ $# -eq 6 ]] ; then
     user=$5
     pass=$6
     caidapfx=caida-
     traceopts+=(-u "$user" -p "$pass")
+    echo "using provided user and password to access CAIDA traces"
 fi
 
 for data in asorg bgp peeringdb prefix2as rels rir ; do
