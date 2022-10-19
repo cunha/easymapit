@@ -155,16 +155,16 @@ truncate --size 0 /data/bdrmapit/ripe-index.txt
 truncate --size 0 /data/bdrmapit/warts-index.txt
 
 if [[ -d /data/bdrmapit/ripe-recent ]] ; then
-    find /data/bdrmapit/ripe-recent -name "traceroute-$date*bz2" -type f \
+    find /data/bdrmapit/ripe-recent -name "traceroute-*bz2" -type f \
             >> /data/bdrmapit/ripe-index.txt
 fi
 
 if [[ -d /data/bdrmapit/prefix ]] ; then
-    find /data/bdrmapit/prefix -name "*.$shortdate.warts.gz" -type f \
+    find /data/bdrmapit/prefix -name "*.warts.gz" -type f \
             >> /data/bdrmapit/warts-index.txt
 fi
 if [[ -d /data/bdrmapit/team ]] ; then
-    find /data/bdrmapit/team -name "*.$shortdate.warts.gz" -type f \
+    find /data/bdrmapit/team -name "*.warts.gz" -type f \
             >> /data/bdrmapit/warts-index.txt
 fi
 
