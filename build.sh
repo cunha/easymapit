@@ -13,4 +13,4 @@ else
     git clone --branch dev https://gitlab.com/italocunha/traceutils2.git
 fi
 
-docker build . --tag easymapit
+docker build --no-cache . --tag easymapit
