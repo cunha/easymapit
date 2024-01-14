@@ -1,8 +1,7 @@
 # easymapit
 
 So you have a `traces.txt` list of files with traceroute measurements
-from a specific `date`, and all you want to know which ASes the IPs are
-in using `bdrmapit`?  We got you:
+from a specific `date`, and all you want to know is which ASes the IPs map to using `bdrmapit`?  We got you:
 
 ```{bash}
 ./build.sh
