@@ -4,7 +4,7 @@ FROM python:3.7-bullseye
 VOLUME /data
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y scamper cython3 python3-dev gcc
+RUN apt-get update && apt-get install -y scamper cython3 python3-dev gcc curl
 # Match Debian bullseye (here to avoid upstream changes):
 RUN pip install Cython==0.29.21
 
