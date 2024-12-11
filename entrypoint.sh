@@ -1,6 +1,7 @@
 #!/bin/bash
 set -eu
 
+RADB_DB_URL=ftp://ftp.radb.net/radb/dbase/radb.db.gz
 NUMPROCS=12
 
 function usage {
@@ -108,6 +109,13 @@ monthdate=${shortdate:0:6}
 asorgdate=$(grep -Ee "^$shortdate" /data/bdrmapit/asorg/datemap.txt \
         | cut -d " " -f 2)
 
+if [[ ! -d /data/bdrmapit/rpsl ]] ; then
+    echo "Downloading RADB RPSL dump"
+    curl --silent --create-dirs \
+            --output "/data/bdrmapit/rpsl/$shortdate.radb.db.gz" \
+            $RADB_DB_URL
+fi
+
 if [[ ! -s "/data/bdrmapit/rir/$shortdate.rir.prefixes" ]] ; then
     echo "Generating RIR prefix-to-AS file"
     find /data/bdrmapit/rir -type f > /data/bdrmapit/rir/rir.files
@@ -129,7 +137,8 @@ if [[ ! -s "/data/bdrmapit/ip2as/$shortdate.prefixes" ]] ; then
             -R "/data/bdrmapit/rels/${monthdate}01.as-rel.txt.bz2" \
             -c "/data/bdrmapit/rels/${monthdate}01.ppdc-ases.txt.bz2" \
             -a "/data/bdrmapit/asorg/$asorgdate.as-org2info.jsonl.gz" \
-            -o "/data/bdrmapit/ip2as/$shortdate.prefixes"
+            -o "/data/bdrmapit/ip2as/$shortdate.prefixes" \
+            -w "/data/bdrmapit/rpsl/$shortdate.radb.db.gz"
     logtime "RUNTIME END ip2as"
 fi
 
