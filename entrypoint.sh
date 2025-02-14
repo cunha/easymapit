@@ -170,7 +170,23 @@ fi
 
 case $tracetype in
 A)
-    cat "$tracelist" >> /data/bdrmapit/ripe-index.txt
+    while read -r fp ; do
+        narrays=$(jq -e 'type == "array"' "$fp" | grep -c true || true)
+        if [[ $narrays -ge 2 ]] ; then
+            echo "input $fp has more than one JSON array, aborting"
+            exit 1
+        elif [[ $narrays -eq 1 ]]; then
+            echo "converting $fp to jsonl"
+            jq -c '.[]' "$fp" > "${fp%%.json}.jsonl"
+            mv "${fp%%.json}.jsonl" "$fp"
+        fi
+        isobject=$(head -n1 "$fp" | jq -e 'type == "object"')
+        if [[ $isobject != "true" ]] ; then
+            echo "input $fp does not have a valid JSON object on its first line"
+            exit 1
+        fi
+        echo "$fp" >> /data/bdrmapit/ripe-index.txt
+    done < "$tracelist"
     ;;
 W)
     cat "$tracelist" >> /data/bdrmapit/warts-index.txt

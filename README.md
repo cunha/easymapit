@@ -34,6 +34,8 @@ You can apply to get access to CAIDA's private Ark measurements
 
 ## Notes
 
+* `bdrmapit` reads JSON files one line at a time, and expects to get a full JSON object on each line.  As a result, JSON files should either contain one JSON object per line (also referred to as JSONL), or a list with all traces in a single line. (JSONL is preferred for reduced RAM use.)  `easymapit` will automatically attempt to convert files for you if it detects that the file does not have one object per line.
+
 * Several `bdrmapit` dependencies use Cython, which may not behave
   correctly on Apple M1/M2 processors.  We have at least one report of
   crashes on new M1/M2 Macs.
